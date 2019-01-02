@@ -6,6 +6,14 @@ import pandas as pd
 
 class BayesDetector(object):
     """Implementation of Naive Bayes for binary classification"""
+    def __init__(self,column):
+        self.column = column
+
+    def positive_to_boolean(self, result: list):
+        res = pd.Series(result)
+        res = res.where(res < 0, 1)
+        res = res.where(res >= 0, 0)
+        return res
 
     def clean(self, s):
         translator = str.maketrans("", "", string.punctuation)
@@ -28,12 +36,13 @@ class BayesDetector(object):
         dict_return_value = [(key, value) for key, value in longest_entries]
         return dict(dict_return_value)
 
-    def fit(self, X, Y):
+    def fit(self, X_df, Y):
         self.num_messages = {}
         self.log_class_priors = {}
         self.word_counts = {}
         self.vocab = set()
 
+        X = X_df[self.column]
         n = len(X)
         self.num_messages['Acquisition'] = sum(1 for label in Y if label == 1)
         self.num_messages['NoAcquisition'] = sum(1 for label in Y if label == 0)
@@ -58,7 +67,8 @@ class BayesDetector(object):
         self.vocab = set(self.word_counts["Acquisition"].keys()).union(self.word_counts["NoAcquisition"].keys())
         return
 
-    def predict(self, X):
+    def prediction_and_confidence(self, X_df):
+        X = X_df[self.column]
         result = []
         for x in X:
             counts = self.get_word_counts(self.tokenize(x))
@@ -80,7 +90,8 @@ class BayesDetector(object):
 
             acquisition_score += self.log_class_priors['Acquisition']
             no_acquisition_score += self.log_class_priors['NoAcquisition']
-
             result.append(acquisition_score - no_acquisition_score)
 
-        return result
+        result = pd.Series(result)
+        result_int = self.positive_to_boolean(result)
+        return result_int, result

@@ -24,11 +24,12 @@ def create_new_count_features(df: pd.DataFrame, columns, dct: dict):
 def create_new_features(df: pd.DataFrame):
     old_columns = set(df.columns)
     # url, title, description, content
-    print(df.head())
     # Hand-crafted features
     create_new_count_features(df, ("title", "description", "content"),
                              {"acquisition": None, "acquires": None, "acquired": None})
     # Features: Url site, URL
 
     new_columns = list(set(df.columns) - old_columns)
-    return df, new_columns
+    result = pd.DataFrame(df[new_columns])
+    df.drop(columns = new_columns,inplace=True)
+    return result, new_columns
