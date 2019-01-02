@@ -4,19 +4,23 @@ import string
 import pandas as pd
 
 
-class BayesDetector(object):
+# Creates a Naive bayes text classifier from one column of the dataframe (column is a constructor parameter).
+class BayesClassifier(object):
     """Implementation of Naive Bayes for binary classification"""
 
     def __init__(self, column):
         self.column = column
+        self.vocab = set()
 
     def positive_to_boolean(self, result: list):
+        """ Convert to boolean indicating if >=0 """
         res = pd.Series(result)
         res = res.where(res < 0, 1)
         res = res.where(res >= 0, 0)
         return res
 
     def clean(self, s):
+        """ Remove punctuation and digits from the string"""
         translator = str.maketrans("", "", string.punctuation)
         remove_digits = str.maketrans('', '', string.digits)
         return s.translate(remove_digits).translate(translator)
@@ -31,17 +35,16 @@ class BayesDetector(object):
             word_counts[word] = word_counts.get(word, 0.0) + 1.0
         return word_counts
 
-    def get_n_longest_values(self, dictionary, n):
-        longest_entries = sorted(
+    def get_n_largest_values_in_dictionary(self, dictionary, n):
+        largest_entries = sorted(
             dictionary.items(), key=lambda t: t[1], reverse=True)[:n]
-        dict_return_value = [(key, value) for key, value in longest_entries]
+        dict_return_value = [(key, value) for key, value in largest_entries]
         return dict(dict_return_value)
 
     def fit(self, X_df, Y):
         self.num_messages = {}
         self.log_class_priors = {}
         self.word_counts = {}
-        self.vocab = set()
 
         X = X_df[self.column]
         n = len(X)
@@ -63,8 +66,8 @@ class BayesDetector(object):
 
                 self.word_counts[c][word] += count
 
-        self.word_counts["Acquisition"] = self.get_n_longest_values(self.word_counts["Acquisition"], 100)
-        self.word_counts["NoAcquisition"] = self.get_n_longest_values(self.word_counts["NoAcquisition"], 100)
+        self.word_counts["Acquisition"] = self.get_n_largest_values_in_dictionary(self.word_counts["Acquisition"], 100)
+        self.word_counts["NoAcquisition"] = self.get_n_largest_values_in_dictionary(self.word_counts["NoAcquisition"], 100)
         self.vocab = set(self.word_counts["Acquisition"].keys()).union(self.word_counts["NoAcquisition"].keys())
         return
 
@@ -91,7 +94,7 @@ class BayesDetector(object):
 
             acquisition_score += self.log_class_priors['Acquisition']
             no_acquisition_score += self.log_class_priors['NoAcquisition']
-            result.append(acquisition_score - no_acquisition_score)
+            result.append(acquisition_score - no_acquisition_score) # Difference between probabilities simulates the "confidence"
 
         result = pd.Series(result)
         result_int = self.positive_to_boolean(result)

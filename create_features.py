@@ -32,4 +32,4 @@ def create_new_features(df: pd.DataFrame):
     new_columns = list(set(df.columns) - old_columns)
     result = pd.DataFrame(df[new_columns])
     df.drop(columns=new_columns, inplace=True)
-    return result, new_columns
+    return result

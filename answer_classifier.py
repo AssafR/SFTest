@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 import create_features
-from bayes_detector import BayesDetector
+from bayes_classifier import BayesClassifier
 from logistic_classifier import logistic_classifier
 
 
@@ -79,7 +79,7 @@ class answer_classifier(object):
         self.classifiers["Logistic Regression on 2 Keywords"] = logistic_classifier()
         for column in ["title", "description", "content"]:  #
             description = "Bayesian on column [" + column + "]"
-            self.classifiers[description] = BayesDetector(column)
+            self.classifiers[description] = BayesClassifier(column)
 
         # Create first-level predictors
         for name, classifier in self.classifiers.items():
