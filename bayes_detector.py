@@ -6,7 +6,8 @@ import pandas as pd
 
 class BayesDetector(object):
     """Implementation of Naive Bayes for binary classification"""
-    def __init__(self,column):
+
+    def __init__(self, column):
         self.column = column
 
     def positive_to_boolean(self, result: list):

@@ -1,10 +1,9 @@
+import itertools
 import pickle
 import os.path
 
 import pandas as pd
-import create_features
 from answer_classifier import answer_classifier
-from bayes_detector import BayesDetector
 
 
 def read_data_from_csv(filename):
@@ -39,7 +38,20 @@ def main():
     answer = answer_classifier(df)
     answer.run_train_test(df)
 
-
+    print("\r\n\r\n*** Test method classify() on some positive examples ***")
+    df_filtered = df[df['result'] == 1]
+    num_rows = 4
+    for index, row in itertools.islice(df_filtered.iterrows(), num_rows):
+        print("row: ", index)
+        url = row["url"]
+        title = row["title"]
+        description = row["description"]
+        content = row["content"]
+        prediction = answer.classify(url, title, description, content)
+        print("{0}:\r\n{1}\r\n{2}:\r\n{3}\r\n{4}:\r\n{5}\r\n{6}:\r\n{7}\r\n{8}{9}\r\n{10}{11}\r\n----------------".format(
+            "url",url,"title",title,"description",description,"content",content,"result:",row["result"],"predicted:",prediction
+        ))
 
 if __name__ == "__main__":
+    pd.options.mode.chained_assignment = None
     main()

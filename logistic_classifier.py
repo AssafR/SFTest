@@ -3,6 +3,7 @@ from sklearn.preprocessing import StandardScaler
 import create_features
 import pandas as pd
 
+
 class logistic_classifier(object):
     def __init__(self):
         self.scaler = None
@@ -20,4 +21,4 @@ class logistic_classifier(object):
         X_test_log = self.scaler.transform(X_test_log)
         test_prediction = self.logreg.predict(X_test_log)
         test_confidence = self.logreg.decision_function(X_test_log)
-        return test_prediction,test_confidence
+        return test_prediction, test_confidence

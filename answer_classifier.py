@@ -14,6 +14,7 @@ class answer_classifier(object):
     def __init__(self, df):
         self.df = df
         self.ensemble = None
+        self.classifiers = dict()
 
     def print_results(self, headline, y, prediction):
         print("Method: " + headline + ", confusion Matrix:")
@@ -50,52 +51,39 @@ class answer_classifier(object):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
         return X_test, X_train, y_test, y_train
 
-    def split_input_output_train_test(self,df):
+    def split_input_output_train_test(self, df):
         y = self.df['result']
         X_test, X_train, y_test, y_train = self.split_df(self.df, y)
         return X_test, X_train, y_test, y_train
 
     def run_level_1_predictors(self, X, y=None):
         combined_results_train = pd.DataFrame()
-        for name, predictor in self.predictors.items():
+        for name, predictor in self.classifiers.items():
             train_prediction_int, train_prediction_confidence = predictor.prediction_and_confidence(X)
             combined_results_train[name] = train_prediction_confidence
             if y is not None:
-                print("Checking performance on training set for " + name)
-                self.print_results(name,y,train_prediction_int)
+                print("\r\nChecking performance on training set for " + name)
+                self.print_results(name, y, train_prediction_int)
         return combined_results_train
 
-    def run_train_test(self,df):
+    def run_train_test(self, df):
         X_test, X_train, y_test, y_train = self.split_input_output_train_test(df)
         self.build_run_classifiers(X_train, y_train)
         prediction_train = self.predict(X_train)
-        self.print_results("Ensemble on Train:",y_train, prediction_train)
+        self.print_results("\r\nEnsemble on train data", y_train, prediction_train)
         prediction_test = self.predict(X_test)
-        self.print_results("Ensemble on Test :",y_test, prediction_test)
+        self.print_results("\r\nEnsemble on test", y_test, prediction_test)
 
-    def build_run_classifiers(self, X_train,y_train):
-        self.print_statistics(self.df)
-        print("----------------")
+    def build_run_classifiers(self, X_train, y_train):
         # Logistic Regression on hand-crafted features
-
-        classifier_object = {
-            "Logistic Regression on 2 Keywords" : logistic_classifier()
-        }
-
-
-        self.predictors = dict()
-        self.logreg = logistic_classifier()
-        self.logreg.fit(X_train, y_train)
-
-        description = "Logistic Regression on 2 Keywords"
-        self.predictors[description] = self.logreg
+        self.classifiers["Logistic Regression on 2 Keywords"] = logistic_classifier()
+        for column in ["title", "description", "content"]:  #
+            description = "Bayesian on column [" + column + "]"
+            self.classifiers[description] = BayesDetector(column)
 
         # Create first-level predictors
-        for column in ["title"]:  # , "description", "content"
-            description = "Bayesian on column " + column
-            bayesian = BayesDetector(column)
-            bayesian.fit(X_train, y_train)
-            self.predictors[description] = bayesian
+        for name, classifier in self.classifiers.items():
+            classifier.fit(X_train, y_train)
 
         combined_results_train = self.run_level_1_predictors(X_train, y_train)
         self.scaler = StandardScaler()
@@ -111,6 +99,7 @@ class answer_classifier(object):
         return prediction
 
     def classify(self, url, title, description, content):
-        data = {"url": url, "title": title, "description": description, "content": content}
+        data = {"url": [url], "title": [title], "description": [description], "content": [content]}
         df = pd.DataFrame.from_dict(data)
         result = self.predict(df)
+        return result

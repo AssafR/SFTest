@@ -26,10 +26,10 @@ def create_new_features(df: pd.DataFrame):
     # url, title, description, content
     # Hand-crafted features
     create_new_count_features(df, ("title", "description", "content"),
-                             {"acquisition": None, "acquires": None, "acquired": None})
+                              {"acquisition": None, "acquires": None, "acquired": None})
     # Features: Url site, URL
 
     new_columns = list(set(df.columns) - old_columns)
     result = pd.DataFrame(df[new_columns])
-    df.drop(columns = new_columns,inplace=True)
+    df.drop(columns=new_columns, inplace=True)
     return result, new_columns
